@@ -21,6 +21,7 @@ import static software.amazon.smithy.aws.go.codegen.AwsProtocolUtils.writeJsonEr
 
 import java.util.Set;
 import software.amazon.smithy.codegen.core.Symbol;
+import software.amazon.smithy.go.codegen.CodegenUtils;
 import software.amazon.smithy.go.codegen.GoWriter;
 import software.amazon.smithy.go.codegen.SmithyGoDependency;
 import software.amazon.smithy.go.codegen.integration.HttpRpcProtocolGenerator;
@@ -34,7 +35,6 @@ import software.amazon.smithy.model.shapes.StructureShape;
  * Handles generating the aws.rest-json protocol for services.
  *
  * @inheritDoc
- *
  * @see HttpRpcProtocolGenerator
  */
 abstract class JsonRpcProtocolGenerator extends HttpRpcProtocolGenerator {
@@ -63,10 +63,9 @@ abstract class JsonRpcProtocolGenerator extends HttpRpcProtocolGenerator {
         GoWriter writer = context.getWriter();
         StructureShape input = ProtocolUtils.expectInput(context.getModel(), operation);
         String functionName = ProtocolGenerator.getDocumentSerializerFunctionName(input, getProtocolName());
-        writer.addUseImports(SmithyGoDependency.SMITHY_JSON);
 
-        // If there are no members then there's nothing to serialize
-        if (input.members().size() == 0) {
+        // Stub synthetic clone inputs mean there never was an input modeled, so nothing should be serialized.
+        if (CodegenUtils.isStubSyntheticClone(ProtocolUtils.expectInput(context.getModel(), operation))) {
             return;
         }
 
