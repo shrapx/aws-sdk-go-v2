@@ -1,0 +1,9 @@
+{
+ "ID": "service.opsworkscm-bugfix-1611357210498722000",
+ "SchemaVersion": 1,
+ "Module": "service/opsworkscm",
+ "Type": "bugfix",
+ "Description": "fix serialize input",
+ "MinVersion": "",
+ "AffectedModules": null
+}
