@@ -61,6 +61,37 @@ func (e *UnixTime) UnmarshalDynamoDBAttributeValue(av types.AttributeValue) erro
 	return nil
 }
 
+// This type is useful as an alternative to the struct tag `unixtime` when you
+// want to have your time value marshaled as Unix time in milliseconds into a number
+// attribute type instead of the default time.RFC3339Nano.
+//
+// For more information see UnixTime
+type UnixTimeMillis time.Time
+
+func (e UnixTimeMillis) MarshalDynamoDBAttributeValue() (types.AttributeValue, error) {
+	return &types.AttributeValueMemberN{
+		Value: strconv.FormatInt(time.Time(e).UnixNano()/1000000, 10),
+	}, nil
+}
+
+func (e *UnixTimeMillis) UnmarshalDynamoDBAttributeValue(av types.AttributeValue) error {
+	tv, ok := av.(*types.AttributeValueMemberN)
+	if !ok {
+		return &UnmarshalTypeError{
+			Value: fmt.Sprintf("%T", av),
+			Type:  reflect.TypeOf((*UnixTime)(nil)),
+		}
+	}
+
+	t, err := decodeUnixTimeMillis(tv.Value)
+	if err != nil {
+		return err
+	}
+
+	*e = UnixTimeMillis(t)
+	return nil
+}
+
 // A Marshaler is an interface to provide custom marshaling of Go value types
 // to AttributeValues. Use this to provide custom logic determining how a
 // Go Value type should be marshaled.
@@ -324,6 +355,9 @@ func (e *Encoder) encodeStruct(v reflect.Value, fieldTag tag) (types.AttributeVa
 		t = v.Convert(timeType).Interface().(time.Time)
 		if fieldTag.AsUnixTime {
 			return UnixTime(t).MarshalDynamoDBAttributeValue()
+		}
+		if fieldTag.AsUnixTimeMillis {
+			return UnixTimeMillis(t).MarshalDynamoDBAttributeValue()
 		}
 		return &types.AttributeValueMemberS{Value: t.Format(time.RFC3339Nano)}, nil
 	}

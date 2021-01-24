@@ -373,6 +373,14 @@ func (d *Decoder) decodeNumber(n string, v reflect.Value, fieldTag tag) error {
 			v.Set(reflect.ValueOf(t).Convert(v.Type()))
 			return nil
 		}
+		if v.Type().ConvertibleTo(timeType) && fieldTag.AsUnixTimeMillis {
+			t, err := decodeUnixTimeMillis(n)
+			if err != nil {
+				return err
+			}
+			v.Set(reflect.ValueOf(t).Convert(v.Type()))
+			return nil
+		}
 		return &UnmarshalTypeError{Value: "number", Type: v.Type()}
 	}
 
@@ -611,6 +619,16 @@ func decodeUnixTime(n string) (time.Time, error) {
 	}
 
 	return time.Unix(v, 0), nil
+}
+
+func decodeUnixTimeMillis(n string) (time.Time, error) {
+	v, err := strconv.ParseInt(n, 10, 64)
+	if err != nil {
+		return time.Time{}, &UnmarshalError{
+			Err: err, Value: n, Type: timeType,
+		}
+	}
+	return time.Unix(0, v*1000000).UTC(), nil
 }
 
 // decoderFieldByIndex finds the field with the provided nested index, allocating

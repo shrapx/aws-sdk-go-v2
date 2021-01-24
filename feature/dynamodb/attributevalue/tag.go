@@ -15,6 +15,7 @@ type tag struct {
 	AsString                     bool
 	AsBinSet, AsNumSet, AsStrSet bool
 	AsUnixTime                   bool
+	AsUnixTimeMillis             bool
 }
 
 func (t *tag) parseAVTag(structTag reflect.StructTag) {
@@ -69,6 +70,8 @@ func (t *tag) parseTagStr(tagStr string) {
 			t.AsStrSet = true
 		case "unixtime":
 			t.AsUnixTime = true
+		case "unixtimemillis":
+			t.AsUnixTimeMillis = true
 		}
 	}
 }
